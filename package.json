@@ -1,0 +1,23 @@
+{
+  "name": "migl-sovereign-agent-suite",
+  "version": "2.0.0",
+  "description": "Autonomous sovereign developer ecosystem fusing 100 open-source tools with Android PRoot and Hexagonal IPC",
+  "main": "core-spine/daemon.js",
+  "scripts": {
+    "start": "node core-spine/daemon.js",
+    "test": "node -c core-spine/daemon.js && echo 'Daemon syntax OK'"
+  },
+  "keywords": [
+    "antigravity",
+    "android",
+    "termux",
+    "proot",
+    "agents",
+    "opencode",
+    "aider",
+    "openhands",
+    "hexagonal-architecture"
+  ],
+  "author": "Rajon Das <lakhidas168@gmail.com>",
+  "license": "Apache-2.0"
+}
