@@ -62,7 +62,7 @@ test('OPTIONS / returns 204 for CORS preflight', async () => {
     assert.strictEqual(res.headers['access-control-allow-origin'], '*');
 });
 
-test('POST /api/dispatch with valid JSON returns 200 and DISPATCHED status', async () => {
+test('POST /api/dispatch with unconfigured backend returns 501 and BACKEND_NOT_CONFIGURED', async () => {
     const payload = JSON.stringify({
         intent: 'run_audit',
         backend: 'opencode',
@@ -80,11 +80,34 @@ test('POST /api/dispatch with valid JSON returns 200 and DISPATCHED status', asy
         }
     }, payload);
 
-    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.statusCode, 501);
     const body = JSON.parse(res.body);
-    assert.strictEqual(body.status, 'DISPATCHED');
+    assert.strictEqual(body.status, 'BACKEND_NOT_CONFIGURED');
     assert.strictEqual(body.intent, 'run_audit');
-    assert.ok(body.task_id.startsWith('task_'));
+    assert.match(body.error, /refusing to claim false dispatch/);
+});
+
+test('NEGATIVE MUTANT: POST /api/dispatch with missing intent returns 400 INVALID_REQUEST', async () => {
+    const payload = JSON.stringify({
+        backend: 'opencode',
+        prompt: 'No intent here'
+    });
+
+    const res = await request({
+        hostname: '127.0.0.1',
+        port: TEST_PORT,
+        path: '/api/dispatch',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(payload)
+        }
+    }, payload);
+
+    assert.strictEqual(res.statusCode, 400);
+    const body = JSON.parse(res.body);
+    assert.strictEqual(body.status, 'INVALID_REQUEST');
+    assert.match(body.error, /intent must be a non-empty string/);
 });
 
 test('NEGATIVE MUTANT: POST /api/dispatch with malformed JSON returns 400', async () => {
@@ -103,6 +126,7 @@ test('NEGATIVE MUTANT: POST /api/dispatch with malformed JSON returns 400', asyn
 
     assert.strictEqual(res.statusCode, 400);
     const body = JSON.parse(res.body);
+    assert.strictEqual(body.status, 'INVALID_REQUEST');
     assert.ok(body.error, 'Response must contain an error message');
 });
 
