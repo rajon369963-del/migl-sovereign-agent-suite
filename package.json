@@ -5,7 +5,8 @@
   "main": "core-spine/daemon.js",
   "scripts": {
     "start": "node core-spine/daemon.js",
-    "test": "node -c core-spine/daemon.js && echo 'Daemon syntax OK'"
+    "test": "node tests/core-spine-realpath.test.js",
+    "test:syntax": "node -c core-spine/daemon.js"
   },
   "keywords": [
     "antigravity",
