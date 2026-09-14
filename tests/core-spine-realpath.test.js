@@ -84,20 +84,31 @@ async function main() {
 
     response = await request(port, 'POST', '/api/dispatch', '{not-json');
     assert.strictEqual(response.status, 400);
-    assert.ok(JSON.parse(response.body).error);
+    assert.strictEqual(JSON.parse(response.body).status, 'INVALID_REQUEST');
 
+    // Negative mutant: missing intent must return 400 INVALID_REQUEST
+    response = await request(
+      port,
+      'POST',
+      '/api/dispatch',
+      JSON.stringify({ backend: 'opencode' })
+    );
+    assert.strictEqual(response.status, 400);
+    assert.strictEqual(JSON.parse(response.body).status, 'INVALID_REQUEST');
+
+    // Unconfigured backend must FAIL CLOSED with 501 BACKEND_NOT_CONFIGURED
     response = await request(
       port,
       'POST',
       '/api/dispatch',
       JSON.stringify({ intent: 'smoke', backend: 'opencode', prompt: 'noop' })
     );
-    assert.strictEqual(response.status, 200);
+    assert.strictEqual(response.status, 501);
     const dispatch = JSON.parse(response.body);
-    assert.strictEqual(dispatch.status, 'DISPATCHED');
+    assert.strictEqual(dispatch.status, 'BACKEND_NOT_CONFIGURED');
     assert.strictEqual(dispatch.intent, 'smoke');
     assert.strictEqual(dispatch.backend, 'opencode');
-    assert.match(dispatch.task_id, /^task_\d+$/);
+    assert.match(dispatch.error, /refusing to claim false dispatch/);
   } finally {
     if (child.exitCode === null) child.kill('SIGTERM');
     await Promise.race([
@@ -111,7 +122,7 @@ async function main() {
 
   assert.throws(() => process.kill(child.pid, 0));
   if (stderr) process.stderr.write(stderr);
-  console.log('core-spine real-path contract: PASS');
+  console.log('core-spine real-path contract: PASS (Fail-Closed Verified)');
 }
 
 main().catch(error => {
