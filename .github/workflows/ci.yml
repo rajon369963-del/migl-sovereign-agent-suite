@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   validate-core:
     runs-on: ubuntu-latest
@@ -15,11 +19,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Validate Hexagonal Daemon Syntax
-        run: |
-          node -c core-spine/daemon.js
-          echo "Hexagonal IPC Router syntax valid."
-      - name: Validate Android Termux Provisioner
-        run: |
-          bash -n scripts/setup-android-termux.sh
-          echo "Android Termux script syntax valid."
+      - name: Validate daemon syntax
+        run: npm run test:syntax
+      - name: Exercise real daemon HTTP contract
+        run: npm test
+      - name: Validate Android Termux provisioner syntax
+        run: bash -n scripts/setup-android-termux.sh
