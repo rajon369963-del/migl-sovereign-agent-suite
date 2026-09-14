@@ -6,10 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
-
 jobs:
   validate-core:
     runs-on: ubuntu-latest
@@ -21,7 +17,7 @@ jobs:
           node-version: '20'
       - name: Validate daemon syntax
         run: npm run test:syntax
-      - name: Exercise real daemon HTTP contract
+      - name: Exercise real daemon HTTP contract & unit test harness
         run: npm test
       - name: Validate Android Termux provisioner syntax
         run: bash -n scripts/setup-android-termux.sh

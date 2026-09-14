@@ -9,7 +9,6 @@
 
 const http = require('http');
 const { spawn } = require('child_process');
-const url = require('url');
 
 const PORT = process.env.PORT || 8080;
 const OPENCODE_PORT = 4096;
@@ -25,7 +24,7 @@ function broadcastSSE(event, data) {
 }
 
 const server = http.createServer((req, res) => {
-    const parsedUrl = url.parse(req.url, true);
+    const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const { pathname } = parsedUrl;
 
     // CORS Headers for Mobile & Web clients
@@ -104,7 +103,12 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ error: 'Endpoint not found' }));
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[✓] MIGL Sovereign Agent Hexagonal Daemon running on port ${PORT}`);
-    console.log(`[✓] ACP SSE Stream available at http://localhost:${PORT}/events`);
-});
+if (require.main === module) {
+    server.listen(PORT, '0.0.0.0', () => {
+        console.log(`[✓] MIGL Sovereign Agent Hexagonal Daemon running on port ${PORT}`);
+        console.log(`[✓] ACP SSE Stream available at http://localhost:${PORT}/events`);
+    });
+}
+
+module.exports = { server, broadcastSSE, clients };
+
